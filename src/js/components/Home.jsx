@@ -9,11 +9,11 @@ const Home = () => {
 	const [todos, setTodos] = useState([]);
 	const [newTodo, setNewTodo] = useState("");
 
-	const obtenerTareas = async ()=> {
+	const obtenerTareas = async () => {
 		try {
 			const response = await fetch("https://playground.4geeks.com/todo/users/enzobarrera")
 			console.log(response.status)
-			if (response.status==404){
+			if (response.status == 404) {
 				await crearUsuario()
 				return
 			}
@@ -25,14 +25,14 @@ const Home = () => {
 		}
 	}
 
-	const crearUsuario = async()=>{
+	const crearUsuario = async () => {
 		try {
 			const response = await fetch("https://playground.4geeks.com/todo/users/enzobarrera", {
-				method: "POST", 
-				headers: {"Content-Type":"application/json"}
+				method: "POST",
+				headers: { "Content-Type": "application/json" }
 			})
 			console.log(response)
-			if(response.status == 201){
+			if (response.status == 201) {
 				await obtenerTareas()
 				return
 			}
@@ -40,20 +40,50 @@ const Home = () => {
 			console.log(error)
 		}
 	}
-	const addTodo = (e) => {
+	const addTodo = async (e) => {
 		if (e.key === "Enter" && newTodo.trim() !== "") {
-			setTodos([...todos, newTodo]);
-			setNewTodo("");
+			const updatedTodos = [...todos, { label: newTodo, done: false }];
+
+			try {
+				const response = await fetch("https://playground.4geeks.com/todo/users/enzobarrera", {
+					method: "PUT",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(updatedTodos)
+				});
+
+				if (response.ok) {
+					setTodos(updatedTodos);
+					setNewTodo("");
+				} else {
+					console.error("Error saving the todo");
+				}
+			} catch (error) {
+				console.error(error);
+			}
 		}
 	};
 
-	const removeTodo = (index) => {
-		setTodos(todos.filter((_, i) => i !== index));
+
+	const removeTodo = async (index) => {
+		const updatedTodos = todos.filter((_, i) => i !== index);
+
+		try {
+			const response = await fetch("https://playground.4geeks.com/todo/users/enzobarrera", {
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(updatedTodos)
+			});
+
+			if (response.ok) {
+				setTodos(updatedTodos);
+			} else {
+				console.error("Error deleting the todo");
+			}
+		} catch (error) {
+			console.error(error);
+		}
 	};
 
-	useEffect(()=>{
-		obtenerTareas()
-	}, [])
 	return (
 		<div className="todo-container">
 			<h1 className="title">todos</h1>
