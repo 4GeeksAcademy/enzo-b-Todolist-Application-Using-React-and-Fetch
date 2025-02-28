@@ -12,13 +12,13 @@ const Home = () => {
 	const obtenerTareas = async () => {
 		try {
 			const response = await fetch("https://playground.4geeks.com/todo/users/enzobarrera")
-			console.log(response.status)
+			// console.log(response.status)
 			if (response.status == 404) {
 				await crearUsuario()
 				return
 			}
 			const data = await response.json()
-			console.log(data.todos)
+
 			setTodos(data.todos)
 		} catch (error) {
 			console.log(error)
@@ -42,21 +42,21 @@ const Home = () => {
 	}
 	const addTodo = async (e) => {
 		if (e.key === "Enter" && newTodo.trim() !== "") {
-			const updatedTodos = [...todos, { label: newTodo, done: false }];
 
 			try {
-				const response = await fetch("https://playground.4geeks.com/todo/users/enzobarrera", {
-					method: "PUT",
+				const response = await fetch("https://playground.4geeks.com/todo/todos/enzobarrera", {
+					method: "POST",
 					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify(updatedTodos)
+					body: JSON.stringify({
+						"label": newTodo,
+						"is_done": false
+					})
 				});
-
-				if (response.ok) {
-					setTodos(updatedTodos);
-					setNewTodo("");
-				} else {
-					console.error("Error saving the todo");
+				if (response.status == 201) {
+					await obtenerTareas()
+					setNewTodo("")
 				}
+
 			} catch (error) {
 				console.error(error);
 			}
@@ -64,25 +64,25 @@ const Home = () => {
 	};
 
 
-	const removeTodo = async (index) => {
-		const updatedTodos = todos.filter((_, i) => i !== index);
+	const removeTodo = async (id) => {
 
 		try {
-			const response = await fetch("https://playground.4geeks.com/todo/users/enzobarrera", {
-				method: "PUT",
+			const response = await fetch("https://playground.4geeks.com/todo/todos/" + id, {
+				method: "DELETE",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(updatedTodos)
 			});
 
-			if (response.ok) {
-				setTodos(updatedTodos);
-			} else {
-				console.error("Error deleting the todo");
+			if (response.status == 204) {
+				await obtenerTareas()
+
 			}
 		} catch (error) {
 			console.error(error);
 		}
 	};
+	useEffect(() => {
+		obtenerTareas()
+	}, [])
 
 	return (
 		<div className="todo-container">
@@ -102,7 +102,8 @@ const Home = () => {
 				{todos.map((todo, index) => (
 					<li key={index} className="todo-item">
 						{todo.label}
-						<button className="delete-button" onClick={() => removeTodo(index)}>✖</button>
+						{/* - {todo.is_done ? "realizada" : "pendiente"} */}
+						<button className="delete-button" onClick={() => removeTodo(todo.id)}>✖</button>
 					</li>
 				))}
 			</ul>
